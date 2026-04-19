@@ -1,0 +1,35 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job">
+  <description>Hello World pipeline created via Jenkins CLI.</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+    <script>pipeline {
+    agent any
+    stages {
+        stage('Hello') {
+            steps {
+                echo 'Hello, World from Jenkins!'
+            }
+        }
+        stage('System info') {
+            steps {
+                sh '''
+                    echo "Node : $(uname -a)"
+                    echo "User : $(whoami)"
+                    echo "Date : $(date -Iseconds)"
+                '''
+            }
+        }
+        stage('Done') {
+            steps {
+                echo "Build #${env.BUILD_NUMBER} finished on ${env.NODE_NAME}"
+            }
+        }
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

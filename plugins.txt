@@ -1,0 +1,8 @@
+configuration-as-code
+workflow-aggregator
+pipeline-stage-view
+pipeline-graph-view
+git
+matrix-auth
+job-dsl
+credentials

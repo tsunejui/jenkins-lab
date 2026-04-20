@@ -162,6 +162,7 @@ API-token setup, and machine-local overrides.
 | End-to-end Jenkins → GitLab CI test flow | [`docs/test-gitlab-cicd.md`](docs/test-gitlab-cicd.md) |
 | Operations: troubleshooting, extending | [`docs/operations.md`](docs/operations.md) |
 | Jenkins Pipeline → GitLab CI converter | [`example/j2gitlab/README.md`](example/j2gitlab/README.md) |
+| Multi-image GitLab CI reference pipeline | [`example/gitlab-pipeline/README.md`](example/gitlab-pipeline/README.md) |
 | `gitlab-ci-local` harness | [`test/README.md`](test/README.md) |
 
 ---

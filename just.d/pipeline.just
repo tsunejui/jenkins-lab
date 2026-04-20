@@ -22,6 +22,11 @@ pipeline-export NAME DIR=exports_dir:
 j2gitlab NAME DIR=exports_dir:
     @./example/j2gitlab/j2gitlab.py {{NAME}} {{DIR}}
 
+# Validate and run the generated GitLab CI YAML samples via gitlab-ci-local.
+[group('pipeline')]
+test-gitlab:
+    @./test/run.sh
+
 # Static definition of a pipeline (CLI get-job): description, stages, script
 [group('pipeline')]
 pipeline-info NAME: cli-jar

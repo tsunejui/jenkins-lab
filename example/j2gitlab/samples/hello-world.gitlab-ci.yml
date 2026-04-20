@@ -9,7 +9,7 @@ stages:
 Hello:
   stage: Hello
   script:
-    - echo 'Hello, World from Jenkins!'
+    - "echo 'Hello, World from Jenkins!'"
 
 "System info":
   stage: "System info"
@@ -23,4 +23,4 @@ Hello:
 Done:
   stage: Done
   script:
-    - echo 'Build #${env.BUILD_NUMBER} finished on ${env.NODE_NAME}'
+    - "echo 'Build #${env.BUILD_NUMBER} finished on ${env.NODE_NAME}'"

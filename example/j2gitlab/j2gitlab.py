@@ -217,7 +217,10 @@ def emit_yaml(name: str, stages: list[dict[str, Any]]) -> str:
 def emit_scripts(steps: list[dict[str, Any]], lines: list[str], indent: str) -> None:
     for st in steps:
         if st["kind"] == "echo":
-            lines.append(f"{indent}- echo {shell_single_quote(st['content'])}")
+            # Build the shell command, then YAML-quote the whole line so that
+            # any '#' / ':' in the message doesn't get eaten by YAML parsing.
+            line = f"echo {shell_single_quote(st['content'])}"
+            lines.append(f"{indent}- {yaml_inline(line)}")
         elif st["kind"] == "sh":
             lines.append(f"{indent}- {yaml_inline(st['content'])}")
         elif st["kind"] == "sh_block":

@@ -1,8 +1,9 @@
 [tools]
-just = "1.46.0"
-java = "temurin-21.0.10+7.0.LTS"
-gum  = "0.17.0"
-jq   = "1.8.1"
+just                  = "1.46.0"
+java                  = "temurin-21.0.10+7.0.LTS"
+gum                   = "0.17.0"
+jq                    = "1.8.1"
+"npm:gitlab-ci-local" = "4.71.0"
 
 [env]
 COMPOSE_PROJECT_NAME = "jenkins-lab"

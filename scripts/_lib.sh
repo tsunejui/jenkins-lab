@@ -37,3 +37,14 @@ _when() {
     date -r "$sec" "+%Y-%m-%dT%H:%M:%S" 2>/dev/null \
         || date -d "@$sec" "+%Y-%m-%dT%H:%M:%S"
 }
+
+# Convert a Jenkins full-name into a REST/CLI URL path so jobs inside folders
+# resolve correctly. Examples:
+#   hello-world         → /job/hello-world
+#   folder/pipeline     → /job/folder/job/pipeline
+#   a/b/c               → /job/a/job/b/job/c
+# Uses sed instead of bash parameter expansion — macOS' default bash 3.2
+# keeps literal backslashes in `${var//\//\/job\/}` replacements.
+_job_path() {
+    printf '/job/%s' "$(printf '%s' "$1" | sed 's|/|/job/|g')"
+}

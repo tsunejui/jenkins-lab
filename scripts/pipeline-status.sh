@@ -8,9 +8,10 @@ source "$(dirname "$0")/_lib.sh"
 
 NAME="${1:?usage: pipeline-status.sh <NAME> [BUILD]}"
 BUILD="${2:-lastBuild}"
+JPATH=$(_job_path "$NAME")
 
 tree="number,result,duration,timestamp,url,building"
-if ! info=$(_jcurl "/job/$NAME/$BUILD/api/json?tree=$tree" 2>&1); then
+if ! info=$(_jcurl "$JPATH/$BUILD/api/json?tree=$tree" 2>&1); then
     echo "no build for $NAME/$BUILD: $info" >&2
     exit 1
 fi
@@ -29,7 +30,7 @@ echo "URL           : $url"
 [ "$building" = "true" ] && echo "In progress   : yes"
 
 # Stage breakdown via wfapi (pipeline-stage-view plugin).
-if wf=$(_jcurl "/job/$NAME/$BUILD/wfapi/describe" 2>/dev/null); then
+if wf=$(_jcurl "$JPATH/$BUILD/wfapi/describe" 2>/dev/null); then
     echo
     echo "Stages:"
     printf '%s' "$wf" \
@@ -44,7 +45,7 @@ fi
 
 # Recent build history only when asking for the last build.
 if [ "$BUILD" = "lastBuild" ]; then
-    hist=$(_jcurl "/job/$NAME/api/json?tree=builds[number,result,duration,timestamp]" \
+    hist=$(_jcurl "$JPATH/api/json?tree=builds[number,result,duration,timestamp]" \
              | _jq -r '(.builds // [])[:8] | .[] | [.number,(.result // "RUNNING"),.duration,.timestamp] | @tsv')
     if [ -n "$hist" ]; then
         echo

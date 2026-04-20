@@ -26,12 +26,12 @@ grab() {
 }
 
 # config.xml — fatal if missing (job doesn't exist)
-if ! grab "/job/$NAME/config.xml" "$outdir/config.xml"; then
+if ! grab "$(_job_path "$NAME")/config.xml" "$outdir/config.xml"; then
     echo "cannot fetch job '$NAME'" >&2
     exit 1
 fi
 
-grab "/job/$NAME/api/json" "$outdir/info.json" json
+grab "$(_job_path "$NAME")/api/json" "$outdir/info.json" json
 
 lb=$(_jq -r '.lastBuild.number // empty' "$outdir/info.json")
 if [ -z "$lb" ]; then
@@ -39,8 +39,8 @@ if [ -z "$lb" ]; then
     exit 0
 fi
 
-grab "/job/$NAME/$lb/api/json" "$outdir/last-build.json" json
-grab "/job/$NAME/$lb/wfapi/describe" "$outdir/stages.json" json \
+grab "$(_job_path "$NAME")/$lb/api/json" "$outdir/last-build.json" json
+grab "$(_job_path "$NAME")/$lb/wfapi/describe" "$outdir/stages.json" json \
     || echo "  stages.json skipped"
-grab "/job/$NAME/$lb/consoleText" "$outdir/console.log" \
+grab "$(_job_path "$NAME")/$lb/consoleText" "$outdir/console.log" \
     || echo "  console.log skipped"

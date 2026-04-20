@@ -1,22 +1,47 @@
 #!/usr/bin/env bash
-# List WorkflowJob entries on the controller with status + URL.
+# List every WorkflowJob reachable from the controller — recursively walks
+# Folders, OrganizationFolders, and MultiBranchProjects so jobs nested at
+# any depth show up (e.g. `team/project/main`).
 set -euo pipefail
 source "$(dirname "$0")/_lib.sh"
 
-response=$(_jcurl "/api/json?tree=jobs[name,_class,color,url]")
+# fetch_pipelines <api_path> <display_prefix>
+#   api_path       — path under JENKINS_URL for this container
+#                    ("" at root, "/job/folder" for a folder, etc.)
+#   display_prefix — folder path displayed before the job name
+#                    ("" at root, "folder/" for a folder, etc.)
+fetch_pipelines() {
+    local api_path="$1" prefix="$2"
+    local json
+    json=$(_jcurl "$api_path/api/json?tree=jobs[name,_class,color,url]") || return 0
 
-# Extract pipeline rows as TSV: name \t color \t url
-rows=$(printf '%s' "$response" \
-    | _jq -r '.jobs
-              | map(select(._class | endswith("WorkflowJob")))
-              | .[] | [.name, (.color // "notbuilt"), .url] | @tsv')
+    # Emit WorkflowJob rows: full-path-name \t color \t url
+    printf '%s' "$json" | _jq -r --arg p "$prefix" '
+        .jobs[]?
+        | select(._class | endswith("WorkflowJob"))
+        | [($p + .name), (.color // "notbuilt"), .url] | @tsv'
+
+    # Recurse into folder-like containers. Use the child's own `url` field so
+    # we never have to URL-encode special characters ourselves.
+    local base="${JENKINS_URL%/}"
+    while IFS=$'\t' read -r name child_url; do
+        [ -z "$name" ] && continue
+        local child_path="${child_url%/}"
+        child_path="${child_path#"$base"}"
+        fetch_pipelines "$child_path" "$prefix$name/"
+    done < <(printf '%s' "$json" | _jq -r '
+        .jobs[]?
+        | select(._class | test("Folder$|OrganizationFolder$|MultiBranchProject$"))
+        | [.name, .url] | @tsv')
+}
+
+rows=$(fetch_pipelines "" "")
 
 if [ -z "$rows" ]; then
     echo "(no pipeline jobs)"
     exit 0
 fi
 
-# Compute max name width from TSV first column.
 nw=$(printf '%s\n' "$rows" | awk -F'\t' '{ if (length($1) > m) m = length($1) } END { print m }')
 
 printf "%-*s  %-18s  %s\n" "$nw" "NAME" "STATUS" "URL"

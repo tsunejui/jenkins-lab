@@ -1,10 +1,98 @@
 # ─── pipeline / job management ────────────────────────────────────────────────
 # Convention: each pipeline job lives at {{jobs_dir}}/<NAME>.xml
 
-# List all jobs on the controller
+# List all jobs on the controller (any kind)
 [group('pipeline')]
 job-list: cli-jar
     @{{cli}} list-jobs
+
+# List pipeline-type jobs only (WorkflowJob), with status + URL
+[group('pipeline')]
+pipelines:
+    #!/usr/bin/env python3
+    import json, urllib.request, base64, sys
+    URL = "{{jenkins_url}}/api/json?tree=jobs[name,_class,color,url]"
+    AUTH = base64.b64encode(b"{{admin_id}}:{{admin_pw}}").decode()
+    req = urllib.request.Request(URL, headers={"Authorization": f"Basic {AUTH}"})
+    try:
+        data = json.loads(urllib.request.urlopen(req, timeout=10).read())
+    except Exception as e:
+        print(f"query failed: {e}", file=sys.stderr); sys.exit(1)
+    rows = [j for j in data.get("jobs", []) if j["_class"].endswith("WorkflowJob")]
+    if not rows:
+        print("(no pipeline jobs)"); sys.exit(0)
+    STATUS = {"blue": "SUCCESS", "red": "FAILED", "yellow": "UNSTABLE",
+              "aborted": "ABORTED", "disabled": "DISABLED", "notbuilt": "NEVER_RUN"}
+    nw = max(len(j["name"]) for j in rows)
+    print(f"{'NAME':<{nw}}  {'STATUS':<18}  URL")
+    print("-" * (nw + 2 + 18 + 2 + 40))
+    for j in rows:
+        color = j.get("color") or "notbuilt"
+        running = color.endswith("_anime")
+        base = color.replace("_anime", "")
+        status = STATUS.get(base, base.upper())
+        if running: status += " (running)"
+        print(f"{j['name']:<{nw}}  {status:<18}  {j['url']}")
+
+# Full summary of a single pipeline: metadata + last build + stages + history
+[group('pipeline')]
+pipeline-info NAME:
+    #!/usr/bin/env python3
+    import json, urllib.request, base64, datetime, sys
+    BASE = "{{jenkins_url}}"
+    NAME = "{{NAME}}"
+    AUTH = base64.b64encode(b"{{admin_id}}:{{admin_pw}}").decode()
+
+    def get(path):
+        req = urllib.request.Request(f"{BASE}{path}",
+                                     headers={"Authorization": f"Basic {AUTH}"})
+        return json.loads(urllib.request.urlopen(req, timeout=10).read())
+
+    def when(ms):
+        return datetime.datetime.fromtimestamp(ms / 1000).isoformat(timespec="seconds")
+
+    try:
+        job = get(f"/job/{NAME}/api/json?tree=name,_class,description,"
+                  f"buildable,disabled,nextBuildNumber,url,color,"
+                  f"lastBuild[number,result,duration,timestamp,url],"
+                  f"builds[number,result,duration,timestamp]")
+    except Exception as e:
+        print(f"cannot fetch job '{NAME}': {e}", file=sys.stderr); sys.exit(1)
+
+    print(f"Name          : {job['name']}")
+    print(f"Class         : {job['_class'].rsplit('.', 1)[-1]}")
+    print(f"URL           : {job['url']}")
+    if job.get("description"):
+        print(f"Description   : {job['description']}")
+    print(f"Buildable     : {job.get('buildable')}")
+    if job.get("disabled"):
+        print("Disabled      : True")
+    print(f"Next build #  : {job.get('nextBuildNumber')}")
+    print(f"Color         : {job.get('color')}")
+
+    lb = job.get("lastBuild")
+    if not lb:
+        print("\n(no builds yet)"); sys.exit(0)
+
+    print(f"\nLast build    : #{lb['number']} "
+          f"{lb.get('result') or 'RUNNING'}  "
+          f"duration={lb['duration']}ms  at {when(lb['timestamp'])}")
+    print(f"                {lb['url']}")
+
+    try:
+        wf = get(f"/job/{NAME}/lastBuild/wfapi/describe")
+        print("\nStages (last build):")
+        for s in wf.get("stages", []):
+            print(f"  {s['name']:<18} {s['status']:<10} {s['durationMillis']:>6}ms")
+    except Exception as e:
+        print(f"\n(stage info unavailable: {e})")
+
+    builds = (job.get("builds") or [])[:8]
+    if builds:
+        print("\nRecent builds:")
+        for b in builds:
+            print(f"  #{b['number']:<4} {(b.get('result') or 'RUNNING'):<8} "
+                  f"{b['duration']:>6}ms  {when(b['timestamp'])}")
 
 # Print a job's config.xml from the controller
 [group('pipeline')]

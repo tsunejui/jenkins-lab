@@ -125,7 +125,9 @@ Convention: each job lives at `jobs/<NAME>.xml`.
 
 | Command | Purpose |
 |---|---|
-| `just job-list` | List every job |
+| `just job-list` | List every job (any kind) |
+| `just pipelines` | List Pipeline-type jobs with status + URL |
+| `just pipeline-info <NAME>` | Summary of a pipeline: metadata, last build, stages, history |
 | `just job-apply <NAME>` | Idempotent **create-or-update** from local XML |
 | `just job-create <NAME>` / `job-update <NAME>` | Strict create / update |
 | `just job-sync` | Bulk-apply every `jobs/*.xml` |

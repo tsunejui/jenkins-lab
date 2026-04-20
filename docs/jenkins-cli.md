@@ -98,6 +98,8 @@ the full `java -jar …` command.
 |---|---|
 | `just cli <args>` | passthrough to `jenkins-cli.jar` |
 | `just job-list` | `list-jobs` |
+| `just pipelines` | REST `/api/json` filtered to `WorkflowJob` |
+| `just pipeline-info NAME` | REST `/job/NAME/api/json` + `/wfapi/describe` composed |
 | `just job-get NAME` | `get-job NAME` |
 | `just job-create NAME` | `create-job NAME < jobs/NAME.xml` |
 | `just job-update NAME` | `update-job NAME < jobs/NAME.xml` |

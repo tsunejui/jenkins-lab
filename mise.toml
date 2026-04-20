@@ -3,6 +3,7 @@ just                  = "1.46.0"
 java                  = "temurin-21.0.10+7.0.LTS"
 gum                   = "0.17.0"
 jq                    = "1.8.1"
+yq                    = "4.50.1"
 "npm:gitlab-ci-local" = "4.71.0"
 
 # Per-environment vars (JENKINS_URL, admin id/password, demo credentials) live

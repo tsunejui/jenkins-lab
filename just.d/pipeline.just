@@ -22,10 +22,11 @@ pipeline-export NAME DIR=exports_dir:
 j2gitlab NAME DIR=exports_dir:
     @./example/j2gitlab/j2gitlab.py {{NAME}} {{DIR}}
 
-# Validate and run the generated GitLab CI YAML samples via gitlab-ci-local.
+# Validate / run a testcase from test/testcases.yaml via gitlab-ci-local.
+# Interactive picker when no CASE given; pass "all" to parse every case.
 [group('pipeline')]
-test-gitlab:
-    @./test/run.sh
+test-gitlab CASE="":
+    @./test/run.sh {{CASE}}
 
 # Static definition of a pipeline (CLI get-job): description, stages, script
 [group('pipeline')]

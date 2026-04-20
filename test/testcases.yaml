@@ -1,0 +1,24 @@
+# Test cases consumed by test/run.sh (`just test-gitlab`).
+#
+# Each entry points at a .gitlab-ci.yml (relative to the repo root) plus an
+# optional variables file. The runner copies the pipeline to a temporary
+# directory, drops the variables file next to it as
+# `.gitlab-ci-local-variables.yml`, then invokes gitlab-ci-local.
+#
+# To add a new case: drop a new entry under `cases:` and rerun
+# `just test-gitlab`.
+
+cases:
+  hello-world:
+    description: "j2gitlab output for hello-world (plain echo / sh / sh block)"
+    pipeline: example/j2gitlab/samples/hello-world.gitlab-ci.yml
+
+  secret-demo:
+    description: "j2gitlab output for secret-demo (withCredentials flattened to variables:)"
+    pipeline: example/j2gitlab/samples/secret-demo.gitlab-ci.yml
+    variables: test/fixtures/secret-demo.variables.yml
+
+  gitlab-pipeline:
+    description: "Hand-written multi-image reference (5 stages, 9 jobs, 5 images)"
+    pipeline: example/gitlab-pipeline/.gitlab-ci.yml
+    variables: test/fixtures/gitlab-pipeline.variables.yml

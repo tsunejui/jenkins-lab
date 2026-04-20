@@ -1,0 +1,15 @@
+# Enforce LF line endings across platforms; editor settings via .editorconfig
+# only cover new files, while this covers every git operation (checkin,
+# checkout, merge) regardless of the contributor's OS / core.autocrlf.
+* text=auto eol=lf
+
+# Treat these as binary — never convert line endings.
+*.jar    binary
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.tar.gz binary
+*.zip    binary
+*.pdf    binary

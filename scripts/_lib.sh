@@ -16,3 +16,24 @@ cli() {
         -auth "$JENKINS_ADMIN_ID:$JENKINS_ADMIN_PASSWORD" \
         "$@"
 }
+
+# Run jq via mise so the pinned version is always used.
+_jq() {
+    mise exec -- jq "$@"
+}
+
+# Authenticated curl to a Jenkins path. Extra args passed through.
+# Usage: _jcurl <path> [curl-flags...]
+_jcurl() {
+    local path="$1"; shift
+    curl -fsSg -u "$JENKINS_ADMIN_ID:$JENKINS_ADMIN_PASSWORD" \
+        "$@" "$JENKINS_URL$path"
+}
+
+# Cross-platform "epoch ms → ISO-8601 local time".
+_when() {
+    local ms="$1"
+    local sec=$((ms / 1000))
+    date -r "$sec" "+%Y-%m-%dT%H:%M:%S" 2>/dev/null \
+        || date -d "@$sec" "+%Y-%m-%dT%H:%M:%S"
+}

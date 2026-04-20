@@ -9,17 +9,17 @@ job-list: cli-jar
 # List pipeline-type jobs only (WorkflowJob), with status + URL
 [group('pipeline')]
 pipelines:
-    @./scripts/pipelines.py
+    @./scripts/pipelines.sh
 
 # Export a pipeline's config + metadata + last-build artefacts into DIR/NAME/
 [group('pipeline')]
 pipeline-export NAME DIR=exports_dir:
-    @./scripts/pipeline-export.py {{NAME}} {{DIR}}
+    @./scripts/pipeline-export.sh {{NAME}} {{DIR}}
 
 # Full summary of a single pipeline: metadata + last build + stages + history
 [group('pipeline')]
 pipeline-info NAME:
-    @./scripts/pipeline-info.py {{NAME}}
+    @./scripts/pipeline-info.sh {{NAME}}
 
 # Print a job's config.xml from the controller
 [group('pipeline')]

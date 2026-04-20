@@ -28,14 +28,14 @@ jenkins-lab/
 │   ├── cli.just            # [cli]          jenkins-cli wrappers
 │   ├── pipeline.just       # [pipeline]     job-* management
 │   └── interactive.just    # [interactive]  gum-powered menus
-└── scripts/                # Extracted shell / python bodies invoked by recipes
-    ├── _lib.sh             # Shared bash helper (cli() function)
+└── scripts/                # Extracted shell bodies invoked by the recipes
+    ├── _lib.sh             # Shared helpers: cli(), _jq(), _jcurl(), _when()
     ├── wait-ready.sh
     ├── job-apply.sh
     ├── job-sync.sh
-    ├── pipelines.py
-    ├── pipeline-info.py
-    ├── pipeline-export.py
+    ├── pipelines.sh
+    ├── pipeline-info.sh
+    ├── pipeline-export.sh
     └── pipeline-menu.sh
 ```
 

@@ -22,10 +22,21 @@ _jq() {
 
 # Authenticated curl to a Jenkins path. Extra args passed through.
 # Usage: _jcurl <path> [curl-flags...]
+# Echoes the full invocation (password masked) to the controlling terminal
+# so REST calls are just as visible as `cli` calls via jenkins-cli.sh.
 _jcurl() {
     local path="$1"; shift
-    curl -fsSg -u "$JENKINS_ADMIN_ID:$JENKINS_ADMIN_PASSWORD" \
-        "$@" "$JENKINS_URL$path"
+    local url="$JENKINS_URL$path"
+
+    local log
+    if { : > /dev/tty; } 2>/dev/null; then log=/dev/tty; else log=/dev/stderr; fi
+    {
+        printf '    + curl -u %s:****' "$JENKINS_ADMIN_ID"
+        local a; for a in "$@"; do printf ' %q' "$a"; done
+        printf ' %q\n' "$url"
+    } > "$log"
+
+    curl -fsSg -u "$JENKINS_ADMIN_ID:$JENKINS_ADMIN_PASSWORD" "$@" "$url"
 }
 
 # Cross-platform "epoch ms → ISO-8601 local time".

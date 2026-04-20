@@ -8,8 +8,8 @@ source "$(dirname "$0")/_lib.sh"
 
 NAME="${1:?usage: pipeline-info.sh <NAME>}"
 
-if ! xml=$(cli get-job "$NAME" 2>&1); then
-    echo "cannot fetch job '$NAME': $xml" >&2
+if ! xml=$(cli get-job "$NAME"); then
+    echo "cannot fetch job '$NAME'" >&2
     exit 1
 fi
 

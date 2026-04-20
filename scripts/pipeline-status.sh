@@ -11,8 +11,8 @@ BUILD="${2:-lastBuild}"
 JPATH=$(_job_path "$NAME")
 
 tree="number,result,duration,timestamp,url,building"
-if ! info=$(_jcurl "$JPATH/$BUILD/api/json?tree=$tree" 2>&1); then
-    echo "no build for $NAME/$BUILD: $info" >&2
+if ! info=$(_jcurl "$JPATH/$BUILD/api/json?tree=$tree"); then
+    echo "no build for $NAME/$BUILD" >&2
     exit 1
 fi
 

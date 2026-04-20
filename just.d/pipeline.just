@@ -16,10 +16,15 @@ pipelines:
 pipeline-export NAME DIR=exports_dir:
     @./scripts/pipeline-export.sh {{NAME}} {{DIR}}
 
-# Full summary of a single pipeline: metadata + last build + stages + history
+# Static definition of a pipeline (CLI get-job): description, stages, script
 [group('pipeline')]
-pipeline-info NAME:
+pipeline-info NAME: cli-jar
     @./scripts/pipeline-info.sh {{NAME}}
+
+# Runtime state of a pipeline build (REST): result, duration, stages, history
+[group('pipeline')]
+pipeline-status NAME BUILD="lastBuild":
+    @./scripts/pipeline-status.sh {{NAME}} {{BUILD}}
 
 # Print a job's config.xml from the controller
 [group('pipeline')]

@@ -12,7 +12,8 @@ $GUM style --border normal --margin "0 1" --padding "0 2" \
 action=$(printf "%s\n" \
     "build    — trigger a build and stream output" \
     "log      — show console log for lastBuild" \
-    "last     — show last build summary" \
+    "status   — runtime state of last build (result / stages / history)" \
+    "info     — static definition of the pipeline (from CLI get-job)" \
     "open     — open job page in browser" \
     "list     — list all jobs" \
     "apply    — create-or-update from local XML" \
@@ -30,6 +31,10 @@ act=$(echo "$action" | awk '{print $1}')
 case "$act" in
     list)
         just job-list
+        ;;
+    info|status)
+        name=$(just pick-job); [ -n "$name" ] || exit 0
+        just "pipeline-$act" "$name"
         ;;
     apply|create|update|dump)
         name=$(just pick-local); [ -n "$name" ] || exit 0

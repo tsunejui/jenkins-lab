@@ -1,10 +1,29 @@
 # ─── Jenkins container lifecycle ──────────────────────────────────────────────
 
-# Initialize local data directory
+# First-time setup: mise install + link dev env + mkdir data (idempotent)
 [group('jenkins')]
 init:
-    mkdir -p {{data_dir}}
-    @echo "Data directory ready at {{data_dir}}"
+    @mise install
+    @if [ ! -e .mise.local.toml ]; then \
+        ln -sfn jenkins-envs/dev.toml .mise.local.toml; \
+        echo "✓ linked .mise.local.toml → jenkins-envs/dev.toml"; \
+    else \
+        echo "✓ .mise.local.toml already present (leaving as-is)"; \
+    fi
+    @mkdir -p {{data_dir}}
+    @echo "✓ data directory: {{data_dir}}"
+    @echo
+    @echo "Active env:"
+    @if [ -L .mise.local.toml ]; then \
+        echo "  .mise.local.toml → $(readlink .mise.local.toml)"; \
+    else \
+        echo "  .mise.local.toml (regular file — your own overrides)"; \
+    fi
+
+# Interactively switch .mise.local.toml to a file under jenkins-envs/
+[group('jenkins')]
+jenkins-envs:
+    @./scripts/jenkins-envs.sh
 
 # Build the custom Jenkins image (plugins + init hooks)
 [group('jenkins')]
@@ -18,7 +37,8 @@ pull:
 
 # Start Jenkins (builds image if needed)
 [group('jenkins')]
-up: init
+up:
+    @mkdir -p {{data_dir}}
     {{compose}} up -d --build {{service}}
     @echo "Jenkins starting at {{jenkins_url}}"
 

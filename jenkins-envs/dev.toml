@@ -1,0 +1,18 @@
+# Local dev environment — the default target of `just init`.
+#
+# This file is symlinked to .mise.local.toml so mise merges it into the
+# project's [env]. To switch targets run `just jenkins-envs` and pick
+# another *.toml under this directory.
+#
+# Add your own environment by creating jenkins-envs/<name>.toml with the
+# same [env] keys and (optionally) your own credentials.
+
+[env]
+JENKINS_URL            = "http://localhost:8090"
+JENKINS_ADMIN_ID       = "admin"
+JENKINS_ADMIN_PASSWORD = "admin"
+
+# Demo credentials consumed by pipelines/secret-demo.Jenkinsfile.
+DEMO_API_TOKEN     = "lab-api-token-change-me"
+DEMO_USER_ID       = "demo"
+DEMO_USER_PASSWORD = "demo-password"

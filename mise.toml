@@ -5,14 +5,8 @@ gum                   = "0.17.0"
 jq                    = "1.8.1"
 "npm:gitlab-ci-local" = "4.71.0"
 
+# Per-environment vars (JENKINS_URL, admin id/password, demo credentials) live
+# in jenkins-envs/<env>.toml. `just init` symlinks .mise.local.toml →
+# jenkins-envs/dev.toml by default; switch with `just jenkins-envs`.
 [env]
 COMPOSE_PROJECT_NAME = "jenkins-lab"
-JENKINS_URL = "http://localhost:8090"
-JENKINS_ADMIN_ID = "admin"
-JENKINS_ADMIN_PASSWORD = "admin"
-
-# Demo credentials consumed by pipelines/secret-demo.Jenkinsfile.
-# Override locally via .mise.local.toml for anything realistic.
-DEMO_API_TOKEN     = "lab-api-token-change-me"
-DEMO_USER_ID       = "demo"
-DEMO_USER_PASSWORD = "demo-password"

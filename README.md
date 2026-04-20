@@ -81,15 +81,72 @@ Full step-by-step with commands and file artefacts in
 ## Quick start
 
 ```bash
-mise install                    # just / java / gum / jq / gitlab-ci-local (pinned)
+just init                       # mise install + link dev env + mkdir data (once)
 just up                         # build image, start container, load JCasC
 just wait-ready                 # block until http://localhost:8090/login is 200
 just job-build hello-world      # run the demo pipeline (seeded automatically)
 just test-gitlab                # convert + validate the GitLab CI sample
 ```
 
-Default credentials: `admin` / `admin` (override in `mise.toml`, or use
-`.mise.local.toml` to keep overrides out of git).
+Default credentials for the seeded local Jenkins: `admin` / `admin`
+(defined in `jenkins-envs/dev.toml`; switch or override as shown below).
+
+---
+
+## Multi-environment setup
+
+Per-environment values (`JENKINS_URL`, admin credentials, demo secrets) live
+under [`jenkins-envs/`](jenkins-envs/) — one `.toml` per target:
+
+```
+jenkins-envs/
+├── dev.toml              # git-tracked default: local docker Jenkins
+├── staging.toml          # you add these as you need them
+└── prod.toml             # …
+```
+
+`just init` symlinks `.mise.local.toml → jenkins-envs/dev.toml` on first run
+(`.mise.local.toml` itself is `.gitignore`d, so each machine picks its own
+target). `mise` merges the linked file's `[env]` over `mise.toml`.
+
+### Switch target interactively
+
+```bash
+just jenkins-envs
+# ? Select Jenkins env   (current: dev)
+#   › dev
+#     staging
+#     prod
+```
+
+Picks any `*.toml` under `jenkins-envs/`, updates the symlink, and prints a
+preview (passwords / tokens masked).
+
+### Add a new target
+
+```bash
+cat > jenkins-envs/staging.toml <<'TOML'
+[env]
+JENKINS_URL            = "https://jenkins.staging.example.com"
+JENKINS_ADMIN_ID       = "rex"
+JENKINS_ADMIN_PASSWORD = "<api-token-from-Jenkins-UI>"
+
+# Only needed if secret-demo is on that controller:
+DEMO_API_TOKEN     = "…"
+DEMO_USER_ID       = "…"
+DEMO_USER_PASSWORD = "…"
+TOML
+
+just jenkins-envs          # pick "staging"
+just cli who-am-i          # verify auth against the remote controller
+```
+
+**Only non-`[jenkins]` recipes** (i.e. `[cli]`, `[pipeline]`, `[interactive]`)
+target the linked Jenkins. `just up` / `down` / `restart` etc. always act on
+the **local** container, regardless of which env file is linked.
+
+See [`docs/configuration.md`](docs/configuration.md) for credential rotation,
+API-token setup, and machine-local overrides.
 
 ---
 

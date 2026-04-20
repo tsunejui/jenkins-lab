@@ -23,8 +23,8 @@ cli-jar-refresh:
 cli *ARGS: cli-jar
     @{{cli}} {{ARGS}}
 
-# Reload JCasC without restarting Jenkins
+# Re-apply JCasC (jcasc/jenkins.yaml) without restarting Jenkins
 [group('cli')]
 reload-casc: cli-jar
-    @{{cli}} reload-configuration-as-code
-    @echo "JCasC reloaded."
+    @{{cli}} apply-configuration
+    @echo "JCasC re-applied."

@@ -34,3 +34,31 @@ unclassified:
   location:
     url: "http://localhost:8090/"
     adminAddress: "admin@jenkins.lab"
+
+jobs:
+  - script: |
+      pipelineJob('jcasc-demo') {
+        description('Pipeline defined inline in jcasc/jenkins.yaml (Job DSL)')
+        definition {
+          cps {
+            sandbox(true)
+            script('''
+              pipeline {
+                  agent any
+                  stages {
+                      stage('Hello from JCasC') {
+                          steps {
+                              echo 'This pipeline was created by Job DSL embedded in JCasC.'
+                          }
+                      }
+                      stage('Env') {
+                          steps {
+                              sh 'echo "Build #${BUILD_NUMBER} on ${NODE_NAME}"'
+                          }
+                      }
+                  }
+              }
+            '''.stripIndent())
+          }
+        }
+      }

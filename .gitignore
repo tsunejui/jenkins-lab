@@ -8,3 +8,6 @@ tools/*.jar
 # Environment profiles that hold real credentials — jenkins-envs/dev.toml
 # stays tracked as the shared default.
 jenkins-envs/prod.toml
+
+# gitlab-ci-local writes cache + expanded yaml here on every run.
+.gitlab-ci-local/

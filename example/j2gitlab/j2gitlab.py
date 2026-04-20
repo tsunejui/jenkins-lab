@@ -167,6 +167,20 @@ def emit_yaml(name: str, stages: list[dict[str, Any]]) -> str:
     lines: list[str] = []
     lines.append(f"# Auto-generated from Jenkins pipeline '{name}' by j2gitlab.py.")
     lines.append("# Review and edit before committing — mapping is best-effort.")
+    lines.append("#")
+    lines.append("# ─── test this file locally ────────────────────────────────────────────")
+    lines.append("#   # via the shared harness (recommended)")
+    lines.append("#   just test-gitlab")
+    lines.append("#")
+    lines.append("#   # manual run — copy to a temp dir first (gitlab-ci-local reads CWD)")
+    lines.append(f"#   tmp=$(mktemp -d) && cp example/j2gitlab/samples/{name}.gitlab-ci.yml \"$tmp/.gitlab-ci.yml\"")
+    lines.append(f"#   [ -f test/fixtures/{name}.variables.yml ] && \\")
+    lines.append(f"#       cp test/fixtures/{name}.variables.yml \"$tmp/.gitlab-ci-local-variables.yml\"")
+    lines.append('#   rel=$(python3 -c "import os;print(os.path.relpath(\'$tmp\'))")')
+    lines.append("#   mise exec npm:gitlab-ci-local -- gitlab-ci-local --cwd \"$rel\" --list")
+    lines.append("#   mise exec npm:gitlab-ci-local -- gitlab-ci-local --cwd \"$rel\" --preview")
+    lines.append("#   mise exec npm:gitlab-ci-local -- gitlab-ci-local --cwd \"$rel\"")
+    lines.append("# ───────────────────────────────────────────────────────────────────────")
     lines.append("")
 
     # Collect credentials referenced anywhere.

@@ -146,6 +146,9 @@ Convention: each job lives at `jobs/<NAME>.xml`.
 | `just pipeline-export <NAME> [DIR]` | Dump config.xml / info.json / stages / console to `DIR/NAME/` (default `./exports/`) |
 | `just j2gitlab <NAME> [DIR]` | Best-effort convert pipeline to GitLab CI/CD YAML (output to stdout) — see [`example/j2gitlab/`](example/j2gitlab/README.md) |
 | `just test-gitlab` | Validate + run the generated samples via gitlab-ci-local — see [`test/`](test/README.md) |
+
+For the end-to-end sequence (Jenkins pipeline build → export → convert →
+gitlab-ci-local validation), follow [`docs/test-gitlab-cicd.md`](docs/test-gitlab-cicd.md).
 | `just job-apply <NAME>` | Idempotent **create-or-update** from local XML |
 | `just job-create <NAME>` / `job-update <NAME>` | Strict create / update |
 | `just job-sync` | Bulk-apply every `jobs/*.xml` |

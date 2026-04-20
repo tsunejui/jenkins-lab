@@ -9,12 +9,10 @@
 : "${JENKINS_ADMIN_PASSWORD:?JENKINS_ADMIN_PASSWORD is required}"
 : "${JENKINS_CLI_JAR:=./tools/jenkins-cli.jar}"
 
-# Run jenkins-cli.jar with auth. Uses mise exec so Java 21 is guaranteed.
+# Run jenkins-cli.jar with auth. Delegates to scripts/jenkins-cli.sh so the
+# invocation gets echoed (with password masked) once, from a single place.
 cli() {
-    mise exec -- java -jar "$JENKINS_CLI_JAR" \
-        -s "$JENKINS_URL" \
-        -auth "$JENKINS_ADMIN_ID:$JENKINS_ADMIN_PASSWORD" \
-        "$@"
+    "$(dirname "${BASH_SOURCE[0]}")/jenkins-cli.sh" "$@"
 }
 
 # Run jq via mise so the pinned version is always used.

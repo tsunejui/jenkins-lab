@@ -8,14 +8,12 @@ set -euo pipefail
 SAMPLES_DIR="example/j2gitlab/samples"
 FIXTURES_DIR="test/fixtures"
 
-# FD 9 = script's original stderr (= user's terminal). Command echoes go
-# here, so they survive caller redirects like `gcl ... > out.log 2> err.log`.
-exec 9>&2
-
-# Echo the exact command before running it so users can see / copy-paste what
-# gets executed.
+# Echo each gitlab-ci-local invocation to the controlling terminal so it
+# shows even when the caller captures stdout and stderr (e.g. `gcl ...
+# > out.log 2> err.log`). Fall back to stderr when no tty is available.
+if { : > /dev/tty; } 2>/dev/null; then gcl_log=/dev/tty; else gcl_log=/dev/stderr; fi
 gcl() {
-    { printf '    + gitlab-ci-local'; printf ' %q' "$@"; printf '\n'; } >&9
+    { printf '    + gitlab-ci-local'; printf ' %q' "$@"; printf '\n'; } > "$gcl_log"
     mise exec npm:gitlab-ci-local -- gitlab-ci-local "$@"
 }
 

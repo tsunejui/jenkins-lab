@@ -13,7 +13,9 @@ admin_id    := env_var_or_default("JENKINS_ADMIN_ID", "admin")
 admin_pw    := env_var_or_default("JENKINS_ADMIN_PASSWORD", "admin")
 java        := "mise exec -- java"
 gum         := "mise exec -- gum"
-cli         := java + " -jar " + cli_jar + " -s " + jenkins_url + " -auth " + admin_id + ":" + admin_pw
+# Routed through a wrapper so every CLI invocation gets logged (password
+# masked). Arguments to the wrapper forward straight to jenkins-cli.jar.
+cli         := "./scripts/jenkins-cli.sh"
 
 # Exported so scripts/*.{sh,py} can read them as environment variables.
 export JENKINS_URL            := jenkins_url

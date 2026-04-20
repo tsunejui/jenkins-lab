@@ -18,6 +18,9 @@ jenkins-lab/
 │   └── 10-banner.groovy    # Example Groovy boot hook
 ├── jobs/
 │   └── hello-world.xml     # Pipeline job XML, applied via Jenkins CLI
+├── tools/                  # Binary artefacts (jenkins-cli.jar), git-ignored
+├── docs/
+│   └── jenkins-cli.md      # How to obtain and use jenkins-cli.jar
 ├── mise.toml               # Tool versions (just / java / gum) + env
 ├── justfile                # Shared variables + imports
 └── just.d/
@@ -109,9 +112,13 @@ Run `just` (or `just default`) for the full list. Recipes are grouped:
 | Command | Purpose |
 |---|---|
 | `just wait-ready` | Wait until `/login` responds (gum spinner) |
-| `just cli-jar` | Download `jenkins-cli.jar` (cached locally) |
+| `just cli-jar` | Download `jenkins-cli.jar` into `tools/` (cached) |
+| `just cli-jar-refresh` | Re-download after a Jenkins upgrade |
 | `just cli <args>` | Run any CLI subcommand, e.g. `just cli help` |
 | `just reload-casc` | Hot-reload JCasC without restarting the container |
+
+See [`docs/jenkins-cli.md`](docs/jenkins-cli.md) for a full walkthrough of
+how the CLI is fetched, authenticated, and invoked directly.
 
 ### `[pipeline]` — job CRUD
 Convention: each job lives at `jobs/<NAME>.xml`.

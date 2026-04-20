@@ -1,6 +1,6 @@
 data/
 backups/
 .mise.local.toml
-jenkins-cli.jar
+tools/*.jar
 .claude/
 

@@ -17,6 +17,7 @@ services:
     volumes:
       - ./data/jenkins_home:/var/jenkins_home
       - ./casc:/var/jenkins_casc:ro
+      - ./pipelines:/var/jenkins_pipelines:ro
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/login"]
       interval: 30s

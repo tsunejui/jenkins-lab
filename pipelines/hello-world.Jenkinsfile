@@ -1,10 +1,7 @@
-<?xml version='1.1' encoding='UTF-8'?>
-<flow-definition plugin="workflow-job">
-  <description>Hello World pipeline created via Jenkins CLI.</description>
-  <keepDependencies>false</keepDependencies>
-  <properties/>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
-    <script>pipeline {
+// Canonical pipeline definition for the hello-world job.
+// Loaded by init.groovy.d/50-seed-pipelines.groovy on every Jenkins boot,
+// which creates or updates the `hello-world` WorkflowJob with this script.
+pipeline {
     agent any
     stages {
         stage('Hello') {
@@ -27,9 +24,4 @@
             }
         }
     }
-}</script>
-    <sandbox>true</sandbox>
-  </definition>
-  <triggers/>
-  <disabled>false</disabled>
-</flow-definition>
+}

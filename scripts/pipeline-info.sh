@@ -31,6 +31,7 @@ keepdeps=$(extract keepDependencies); [ -n "$keepdeps" ] && echo "KeepDeps      
 # stages may be under-represented.
 stages=$(printf '%s' "$xml" \
   | awk '/<script>/,/<\/script>/' \
+  | sed -e 's/&apos;/'"'"'/g' -e 's/&quot;/"/g' \
   | grep -oE "stage\(['\"][^'\"]+['\"]\)" \
   | sed -E "s/stage\(['\"](.+)['\"]\)/  \1/" \
   || true)

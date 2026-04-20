@@ -15,9 +15,11 @@ jenkins-lab/
 ├── casc/
 │   └── jenkins.yaml        # JCasC main config (admin, security, location)
 ├── init.groovy.d/
-│   └── 10-banner.groovy    # Example Groovy boot hook
-├── jobs/
-│   └── hello-world.xml     # Pipeline job XML, applied via Jenkins CLI
+│   ├── 10-banner.groovy         # Example Groovy boot hook
+│   └── 50-seed-pipelines.groovy # Auto-creates pipelines from *.Jenkinsfile
+├── pipelines/
+│   └── hello-world.Jenkinsfile  # Canonical pipeline, seeded on boot
+├── jobs/                         # (optional) full config.xml for non-pipeline jobs
 ├── tools/                  # Binary artefacts (jenkins-cli.jar), git-ignored
 ├── docs/
 │   └── jenkins-cli.md      # How to obtain and use jenkins-cli.jar
@@ -174,15 +176,46 @@ Adding users / changing authorization: tweak `securityRealm` and
 
 ## Adding a pipeline
 
+Two supported patterns:
+
+### A. Jenkinsfile + boot-time seed (recommended)
+
+Drop a `<name>.Jenkinsfile` under `./pipelines/`. On every container start,
+`init.groovy.d/50-seed-pipelines.groovy` reads the directory and
+create-or-updates each corresponding `WorkflowJob`.
+
 ```bash
-# 1. Start from the template (or hand-write)
-cp jobs/hello-world.xml jobs/my-pipeline.xml
-vim jobs/my-pipeline.xml            # edit the <script> block
+# 1. Write the pipeline script
+cat > pipelines/my-pipeline.Jenkinsfile <<'EOF'
+pipeline {
+    agent any
+    stages {
+        stage('Hello') { steps { echo 'hi' } }
+    }
+}
+EOF
 
-# 2. Push it to the controller
+# 2. Apply — restart container so the init hook picks it up
+just restart
+
+# 3. Run
+just job-build my-pipeline
+```
+
+Pros: pipeline script stays as first-class Groovy (syntax-highlighted,
+diff-able), no XML boilerplate. Re-applied automatically on every boot, so
+manual UI edits are treated as ephemeral.
+
+### B. Full config.xml via Jenkins CLI
+
+When you need more than just the pipeline script (triggers, parameters,
+non-pipeline job types), write a complete config under `jobs/<name>.xml`
+and push it via CLI.
+
+```bash
+cp jobs/example.xml jobs/my-pipeline.xml
+vim jobs/my-pipeline.xml
 just job-apply my-pipeline
-
-# 3. Run it
 just job-build my-pipeline
 ```
 

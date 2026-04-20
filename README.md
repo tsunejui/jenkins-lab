@@ -144,6 +144,7 @@ Convention: each job lives at `jobs/<NAME>.xml`.
 | `just pipeline-info <NAME>` | Static definition (CLI `get-job`): description, declared stages, script links |
 | `just pipeline-status <NAME> [BUILD]` | Runtime state of a build (REST): result, duration, stages, recent history |
 | `just pipeline-export <NAME> [DIR]` | Dump config.xml / info.json / stages / console to `DIR/NAME/` (default `./exports/`) |
+| `just j2gitlab <NAME> [DIR]` | Best-effort convert pipeline to GitLab CI/CD YAML (output to stdout) — see [`example/j2gitlab/`](example/j2gitlab/README.md) |
 | `just job-apply <NAME>` | Idempotent **create-or-update** from local XML |
 | `just job-create <NAME>` / `job-update <NAME>` | Strict create / update |
 | `just job-sync` | Bulk-apply every `jobs/*.xml` |

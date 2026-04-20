@@ -16,6 +16,12 @@ pipelines:
 pipeline-export NAME DIR=exports_dir:
     @./scripts/pipeline-export.sh {{NAME}} {{DIR}}
 
+# Best-effort conversion from a Jenkins Declarative Pipeline → GitLab CI YAML.
+# Reads exports/<NAME>/config.xml; output goes to stdout (pipe or redirect).
+[group('pipeline')]
+j2gitlab NAME DIR=exports_dir:
+    @./example/j2gitlab/j2gitlab.py {{NAME}} {{DIR}}
+
 # Static definition of a pipeline (CLI get-job): description, stages, script
 [group('pipeline')]
 pipeline-info NAME: cli-jar

@@ -1,0 +1,26 @@
+# Auto-generated from Jenkins pipeline 'hello-world' by j2gitlab.py.
+# Review and edit before committing — mapping is best-effort.
+
+stages:
+  - Hello
+  - "System info"
+  - Done
+
+Hello:
+  stage: Hello
+  script:
+    - echo 'Hello, World from Jenkins!'
+
+"System info":
+  stage: "System info"
+  script:
+    - |
+      echo "Node : $(uname -a)"
+      echo "User : $(whoami)"
+      echo "Date : $(date -Iseconds)"
+      
+
+Done:
+  stage: Done
+  script:
+    - echo 'Build #${env.BUILD_NUMBER} finished on ${env.NODE_NAME}'

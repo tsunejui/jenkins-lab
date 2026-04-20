@@ -6,3 +6,4 @@ git
 matrix-auth
 job-dsl
 credentials
+credentials-binding

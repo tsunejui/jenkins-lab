@@ -18,7 +18,9 @@ jenkins-lab/
 │   ├── 10-banner.groovy         # Example Groovy boot hook
 │   └── 50-seed-pipelines.groovy # Auto-creates pipelines from *.Jenkinsfile
 ├── pipelines/
-│   └── hello-world.Jenkinsfile  # Canonical pipeline, seeded on boot
+│   ├── hello-world.Jenkinsfile  # Canonical pipeline, seeded on boot
+│   ├── system-check.Jenkinsfile # Demo of multi-file seeding
+│   └── secret-demo.Jenkinsfile  # Consumes credentials via withCredentials
 ├── jobs/                         # (optional) full config.xml for non-pipeline jobs
 ├── tools/                  # Binary artefacts (jenkins-cli.jar), git-ignored
 ├── docs/
@@ -236,6 +238,42 @@ just job-build my-pipeline
 ```
 
 Or interactively: `just pipeline` → `apply` → pick file → `build`.
+
+---
+
+## Using secrets in pipelines
+
+Credentials are defined declaratively in `jcasc/jenkins.yaml`
+(`credentials:` block) and created on every controller boot. Each
+credential has an `id` that Jenkinsfiles reference via `withCredentials`:
+
+```groovy
+// pipelines/secret-demo.Jenkinsfile (excerpt)
+withCredentials([string(credentialsId: 'demo-api-token',
+                        variable: 'API_TOKEN')]) {
+    sh 'curl -H "Authorization: Bearer $API_TOKEN" https://example.com/api'
+}
+```
+
+Jenkins automatically masks the bound values as `****` in the console
+log — even when a step deliberately tries to print them. The
+underlying HTTP response body is not masked, so API calls that echo
+the secret back (like `httpbin.org/bearer`) will appear sanitised in
+the log because Jenkins replaces the literal string wherever it
+appears.
+
+Two demo credentials ship with the lab (see `jcasc/jenkins.yaml`):
+
+| ID | Type | Default value |
+|---|---|---|
+| `demo-api-token` | Secret text | `$DEMO_API_TOKEN` (falls back to `lab-api-token-change-me`) |
+| `demo-basic-auth` | Username + password | `$DEMO_USER_ID` / `$DEMO_USER_PASSWORD` |
+
+Override any of them by setting the env var before `just restart` /
+`just reload-casc`. For realistic secrets, prefer `.mise.local.toml`
+(git-ignored) over committing values to `mise.toml`.
+
+Run `just job-build secret-demo` to see masking in action.
 
 ---
 

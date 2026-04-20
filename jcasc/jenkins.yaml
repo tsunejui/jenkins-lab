@@ -14,6 +14,22 @@ jenkins:
     loggedInUsersCanDoAnything:
       allowAnonymousRead: false
 
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - string:
+              scope: GLOBAL
+              id: "demo-api-token"
+              secret: "${DEMO_API_TOKEN:-lab-api-token-change-me}"
+              description: "Demo string secret consumed by secret-demo.Jenkinsfile"
+          - usernamePassword:
+              scope: GLOBAL
+              id: "demo-basic-auth"
+              username: "${DEMO_USER_ID:-demo}"
+              password: "${DEMO_USER_PASSWORD:-demo-password}"
+              description: "Demo username/password consumed by secret-demo.Jenkinsfile"
+
 unclassified:
   location:
     url: "http://localhost:8090/"

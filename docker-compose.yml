@@ -13,6 +13,9 @@ services:
       CASC_JENKINS_CONFIG: /var/jenkins_jcasc/jenkins.yaml
       JENKINS_ADMIN_ID: "${JENKINS_ADMIN_ID:-admin}"
       JENKINS_ADMIN_PASSWORD: "${JENKINS_ADMIN_PASSWORD:-admin}"
+      DEMO_API_TOKEN: "${DEMO_API_TOKEN:-lab-api-token-change-me}"
+      DEMO_USER_ID: "${DEMO_USER_ID:-demo}"
+      DEMO_USER_PASSWORD: "${DEMO_USER_PASSWORD:-demo-password}"
       TZ: Asia/Taipei
     volumes:
       - ./data/jenkins_home:/var/jenkins_home

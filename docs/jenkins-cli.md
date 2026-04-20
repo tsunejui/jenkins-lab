@@ -150,7 +150,7 @@ jcli offline-node built-in -m "upgrade"
 
 # Configuration as Code
 jcli reload-configuration-as-code
-jcli export-configuration-as-code > casc/dump.yaml
+jcli export-configuration-as-code > jcasc/dump.yaml
 
 # Plugins
 jcli list-plugins

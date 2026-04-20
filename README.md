@@ -12,7 +12,7 @@ jenkins-lab/
 ├── Dockerfile              # Custom image: jenkins-plugin-cli + init hooks
 ├── docker-compose.yml      # Service definition: ports, volumes, env
 ├── plugins.txt             # Plugins required by JCasC / Pipeline / Git
-├── casc/
+├── jcasc/
 │   └── jenkins.yaml        # JCasC main config (admin, security, location)
 ├── init.groovy.d/
 │   ├── 10-banner.groovy         # Example Groovy boot hook
@@ -81,7 +81,7 @@ Default credentials: `admin` / `admin` (override in `mise.toml`).
 
 ```
 ┌───────────┐   mise env   ┌────────────────┐  ${VAR}  ┌─────────────────┐
-│ mise.toml │─────────────▶│ docker-compose │─────────▶│ casc/jenkins.yml │──┐
+│ mise.toml │─────────────▶│ docker-compose │─────────▶│ jcasc/jenkins.yml│──┐
 └───────────┘              └────────────────┘          └─────────────────┘  │
                                                                              ▼
                                                       Jenkins boots, JCasC creates admin
@@ -96,7 +96,7 @@ Default credentials: `admin` / `admin` (override in `mise.toml`).
 1. **`mise.toml`** holds the credentials + URL. They are exported to the shell
    automatically when entering the project directory.
 2. **`docker-compose.yml`** reads those env vars, starts the container, and
-   mounts `./casc` into `/var/jenkins_casc`.
+   mounts `./jcasc` into `/var/jenkins_jcasc`.
 3. **`CASC_JENKINS_CONFIG`** points at the yaml; JCasC creates the admin user
    and disables the setup wizard on boot.
 4. **`just job-*`** drives `jenkins-cli.jar` over REST/CLI, treating
@@ -161,9 +161,25 @@ Convention: each job lives at `jobs/<NAME>.xml`.
 
 ---
 
+## Re-initializing
+
+Pick the right level based on what changed:
+
+| Change | Command | Rationale |
+|---|---|---|
+| `pipelines/*.Jenkinsfile`, `jcasc/jenkins.yaml`, `init.groovy.d/*.groovy` | `just restart` | Bind-mounted; the container re-reads the files on boot. For JCasC alone, `just reload-casc` hot-reloads without restart. |
+| `plugins.txt`, `Dockerfile` | `just upgrade` | Rebuilds the image (pulls base) and recreates the container; local `data/` is preserved. |
+| Wants a clean slate (forgot admin password, bcrypt hash mismatch, corrupt state) | `just reinit` | Destroys container + wipes `./data/jenkins_home` + rebuilds + starts fresh. Prompts for confirmation. |
+
+`init.groovy.d/` used to be baked into the image (and therefore ignored after
+the first boot). It is now bind-mounted at runtime, so `just restart` is
+enough for any Groovy hook edit.
+
+---
+
 ## Editing JCasC
 
-1. Edit `casc/jenkins.yaml`
+1. Edit `jcasc/jenkins.yaml`
 2. Run `just reload-casc` (hot reload) or `just restart`
 3. A misconfigured yaml triggers `BootFailure` on startup; check
    `just logs` for the precise exception
@@ -236,7 +252,7 @@ JENKINS_ADMIN_PASSWORD = "admin"
 
 - mise exports these when you `cd` into the project
 - `docker-compose.yml` passes them to the container via `${VAR:-default}`
-- `casc/jenkins.yaml` substitutes `${VAR}` to create the admin account
+- `jcasc/jenkins.yaml` substitutes `${VAR}` to create the admin account
 - `justfile` reads the same variables via `env_var_or_default` for CLI auth
 
 To change the password:

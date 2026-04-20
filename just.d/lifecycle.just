@@ -63,6 +63,16 @@ upgrade:
     {{compose}} build --pull {{service}}
     {{compose}} up -d --force-recreate {{service}}
 
+# Destroy container + local data, then rebuild and start fresh
+[group('jenkins')]
+[confirm("Full re-init: wipe ./data/jenkins_home and rebuild the image. Continue?")]
+reinit:
+    {{compose}} down -v
+    rm -rf {{data_dir}}
+    {{compose}} build --pull {{service}}
+    {{compose}} up -d --force-recreate {{service}}
+    @echo "Fresh Jenkins starting at {{jenkins_url}}"
+
 # Back up jenkins_home to a timestamped tar.gz
 [group('jenkins')]
 backup:

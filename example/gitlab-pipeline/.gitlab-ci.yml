@@ -24,7 +24,12 @@ default:
 
 preflight:yaml:
   stage: preflight
-  image: cytopia/yamllint:latest
+  # cytopia/yamllint ships with ENTRYPOINT=["yamllint"] so the whole script
+  # block would be treated as a config-file path. Clearing the entrypoint
+  # lets the runner inject its shell like it does for a plain image.
+  image:
+    name: cytopia/yamllint:latest
+    entrypoint: [""]
   script:
     - |
       yamllint -d "{extends: relaxed, rules: {line-length: disable}}" .gitlab-ci.yml

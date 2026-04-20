@@ -1,3 +1,30 @@
+# ─── Jenkins Configuration as Code ───────────────────────────────────────────
+# This file is mounted into the controller at /var/jenkins_jcasc/jenkins.yaml
+# (see docker-compose.yml), and CASC_JENKINS_CONFIG env points the JCasC
+# plugin at it. It is re-applied on every container boot.
+#
+# How to apply changes without restarting the container:
+#
+#   just reload-casc
+#     → runs: jenkins-cli apply-configuration
+#     → re-reads /var/jenkins_jcasc/jenkins.yaml server-side
+#
+#   just cli apply-configuration
+#     → same thing, direct CLI form
+#
+#   cat ad-hoc.yaml | just cli apply-configuration
+#     → push an arbitrary yaml from stdin instead of the server file
+#
+#   just cli check-configuration < jcasc/jenkins.yaml
+#     → validate syntax + schema without applying (good for PR review)
+#
+#   just cli export-configuration
+#     → dump the live controller state as yaml (values are encrypted)
+#
+# Full walkthrough: docs/configuration.md
+# Sibling flows: docs/jenkins-cli.md, docs/operations.md
+# ─────────────────────────────────────────────────────────────────────────────
+
 jenkins:
   systemMessage: "Jenkins Lab · managed by JCasC"
   numExecutors: 2

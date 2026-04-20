@@ -1,6 +1,6 @@
 [tools]
-just = "latest"
-java = "temurin-21"
+just = "1.46.0"
+java = "temurin-21.0.10+7.0.LTS"
 gum  = "0.17.0"
 
 [env]

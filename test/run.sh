@@ -8,7 +8,16 @@ set -euo pipefail
 SAMPLES_DIR="example/j2gitlab/samples"
 FIXTURES_DIR="test/fixtures"
 
-gcl() { mise exec npm:gitlab-ci-local -- gitlab-ci-local "$@"; }
+# FD 9 = script's original stderr (= user's terminal). Command echoes go
+# here, so they survive caller redirects like `gcl ... > out.log 2> err.log`.
+exec 9>&2
+
+# Echo the exact command before running it so users can see / copy-paste what
+# gets executed.
+gcl() {
+    { printf '    + gitlab-ci-local'; printf ' %q' "$@"; printf '\n'; } >&9
+    mise exec npm:gitlab-ci-local -- gitlab-ci-local "$@"
+}
 
 # gitlab-ci-local refuses absolute --cwd paths, so translate to a relative one.
 rel() { python3 -c "import os,sys;print(os.path.relpath(sys.argv[1]))" "$1"; }

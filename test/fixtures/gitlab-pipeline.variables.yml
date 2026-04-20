@@ -1,0 +1,33 @@
+# Placeholder CI/CD variables for running
+# example/gitlab-pipeline/.gitlab-ci.yml locally via gitlab-ci-local.
+#
+# Usage:
+#   cp test/fixtures/gitlab-pipeline.variables.yml \
+#      example/gitlab-pipeline/.gitlab-ci-local-variables.yml
+#
+# In real GitLab, the project admin configures these under
+# Settings → CI/CD → Variables with masking + protection enabled.
+
+DEPLOY_API_TOKEN:  gl-local-deploy-token-REPLACE-ME-0123456789
+REGISTRY_USER:     demo-user
+REGISTRY_PASSWORD: demo-registry-pass-REPLACE-ME
+
+# Delivered as a plain string; the deploy:kubeconfig job writes it to
+# /tmp/kubeconfig inside the container and then uses $KUBECONFIG normally.
+KUBECONFIG_CONTENT: |
+  apiVersion: v1
+  kind: Config
+  clusters:
+    - name: demo-cluster
+      cluster:
+        server: https://k8s.example.com
+  contexts:
+    - name: demo
+      context:
+        cluster: demo-cluster
+        user: demo-user
+  current-context: demo
+  users:
+    - name: demo-user
+      user:
+        token: demo-token-REDACTED

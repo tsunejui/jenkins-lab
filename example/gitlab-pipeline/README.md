@@ -11,20 +11,23 @@ auto-generated output.
 ## What this pipeline shows
 
 ```
-preflight        test              build          publish
-─────────        ────              ─────          ───────
-preflight:yaml   test:python       build:binary   publish:inspect
-preflight:env    test:node                        (needs build:binary)
+preflight        test              build          publish           deploy
+─────────        ────              ─────          ───────           ──────
+preflight:yaml   test:python       build:binary   publish:inspect   deploy:api-auth
+preflight:env    test:node                        (needs build)     deploy:registry-login
+                                                                    deploy:kubeconfig
+                                                                    (all need publish)
 ```
 
 | Concept | Where |
 |---|---|
 | `default:` image as a fallback | top of the yaml (`alpine:3.20`) |
 | Per-job image override | every `image:` in every job |
-| Parallel jobs in one stage | `test:python` + `test:node` run concurrently |
+| Parallel jobs in one stage | `test:python` + `test:node`; three `deploy:*` jobs |
 | Artifact passing | `build:binary` saves `demo-app`, `publish:inspect` consumes it |
-| DAG scheduling | `publish:inspect.needs: [build:binary]` skips waiting for siblings |
+| DAG scheduling | `publish:inspect.needs: [build:binary]`; `deploy:* needs: publish:inspect` |
 | Variables | top-level `APP_NAME` / `APP_VERSION` + predefined `CI_*` |
+| Secrets (masked string + user/pass + string-as-file) | `deploy:*` jobs |
 | Inline scripts | Python / Node / Go code via shell heredocs |
 
 Images involved: `alpine:3.20`, `cytopia/yamllint:latest`,
@@ -111,6 +114,58 @@ gcl --list
 gcl test:python
 gcl          # full run
 ```
+
+---
+
+## Secrets / CI/CD variables
+
+The `deploy:*` jobs expect three kinds of variables that a real GitLab
+project would configure under *Settings → CI/CD → Variables* (with
+**Masked** + **Protected** enabled for anything sensitive):
+
+| Variable | Kind | Consumed by |
+|---|---|---|
+| `DEPLOY_API_TOKEN` | Masked string | `deploy:api-auth` |
+| `REGISTRY_USER` / `REGISTRY_PASSWORD` | String + masked string | `deploy:registry-login` |
+| `KUBECONFIG_CONTENT` | Multi-line string (written to `/tmp/kubeconfig` at runtime) | `deploy:kubeconfig` |
+
+### Providing them locally
+
+A ready-to-use fixture lives at
+[`test/fixtures/gitlab-pipeline.variables.yml`](../../test/fixtures/gitlab-pipeline.variables.yml)
+with placeholder values. Copy it into the pipeline's working directory
+as `.gitlab-ci-local-variables.yml` (the filename `gitlab-ci-local`
+auto-discovers):
+
+```bash
+cp test/fixtures/gitlab-pipeline.variables.yml \
+   example/gitlab-pipeline/.gitlab-ci-local-variables.yml
+
+mise exec npm:gitlab-ci-local -- gitlab-ci-local \
+    --cwd example/gitlab-pipeline \
+    'deploy:api-auth' 'deploy:registry-login' 'deploy:kubeconfig'
+```
+
+`.gitlab-ci-local-variables.yml` is git-ignored via the repo-wide
+`.gitlab-ci-local/` rule for its sibling cache; the fixture itself
+(`test/fixtures/gitlab-pipeline.variables.yml`) is tracked so anyone
+can reproduce the demo.
+
+### Using real secrets
+
+Never commit the fixture's values to anything that matters. For a real
+deployment:
+
+1. Add each variable in GitLab (*Settings → CI/CD → Variables*).
+2. Mark tokens / passwords / kubeconfig content as **Masked** so GitLab
+   redacts them in logs, and **Protected** so only protected branches /
+   tags can read them.
+3. GitLab masking is **per-variable and per-exact-string** — copying a
+   value into another variable or into generated output re-exposes it.
+   Keep the bound env-var usage tight like the demo shows.
+
+For a deep-dive on the same topic from the Jenkins side, see
+[`docs/pipelines.md#using-secrets`](../../docs/pipelines.md#using-secrets).
 
 ---
 

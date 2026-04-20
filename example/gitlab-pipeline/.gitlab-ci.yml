@@ -10,6 +10,7 @@ stages:
   - test
   - build
   - publish
+  - deploy
 
 variables:
   APP_NAME: demo-app
@@ -105,3 +106,58 @@ publish:inspect:
     - ls -la
     - file demo-app
     - echo "would publish ${APP_NAME} ${APP_VERSION}"
+
+# ─── deploy ─────────────────────────────────────────────────────────────────
+# Demonstrates consuming three kinds of CI/CD variables:
+#   • string / masked       → DEPLOY_API_TOKEN
+#   • username + password   → REGISTRY_USER / REGISTRY_PASSWORD
+#   • file-type             → KUBECONFIG (GitLab writes the content to a
+#                             temp file and exports the path)
+#
+# Production: define these under Settings → CI/CD → Variables and mark
+# secret-ish ones as masked + protected.
+# Locally: test/fixtures/gitlab-pipeline.variables.yml provides dummy
+# values — see README.md for the one-line copy command.
+
+deploy:api-auth:
+  stage: deploy
+  image: alpine:3.20
+  needs:
+    - publish:inspect
+  script:
+    - |
+      [ -n "${DEPLOY_API_TOKEN:-}" ] || { echo "DEPLOY_API_TOKEN unset"; exit 1; }
+      echo "Token length    : ${#DEPLOY_API_TOKEN}"
+      echo "Token (prefix)  : ${DEPLOY_API_TOKEN:0:4}****"
+      echo "Would POST to https://api.example.com with Bearer token"
+
+deploy:registry-login:
+  stage: deploy
+  image: alpine:3.20
+  needs:
+    - publish:inspect
+  script:
+    - |
+      [ -n "${REGISTRY_USER:-}" ]     || { echo "REGISTRY_USER unset"; exit 1; }
+      [ -n "${REGISTRY_PASSWORD:-}" ] || { echo "REGISTRY_PASSWORD unset"; exit 1; }
+      echo "Registry user     : $REGISTRY_USER"
+      echo "Password length   : ${#REGISTRY_PASSWORD}"
+      echo "Would run: echo \"\$REGISTRY_PASSWORD\" | docker login -u \"\$REGISTRY_USER\" --password-stdin registry.example.com"
+
+deploy:kubeconfig:
+  stage: deploy
+  image: alpine:3.20
+  needs:
+    - publish:inspect
+  script:
+    - |
+      [ -n "${KUBECONFIG_CONTENT:-}" ] || { echo "KUBECONFIG_CONTENT unset"; exit 1; }
+      # Common pattern when the secret is delivered as a string — write it
+      # to a file inside the job, then point KUBECONFIG at that path so
+      # kubectl / helm can use it.
+      printf '%s' "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
+      export KUBECONFIG=/tmp/kubeconfig
+      echo "KUBECONFIG path : $KUBECONFIG"
+      echo "Lines           : $(wc -l < "$KUBECONFIG")"
+      echo "Preview:"
+      head -10 "$KUBECONFIG" | sed 's/^/  /'

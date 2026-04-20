@@ -23,11 +23,20 @@ jenkins-lab/
 │   └── jenkins-cli.md      # How to obtain and use jenkins-cli.jar
 ├── mise.toml               # Tool versions (just / java / gum) + env
 ├── justfile                # Shared variables + imports
-└── just.d/
-    ├── lifecycle.just      # [jenkins]      container lifecycle
-    ├── cli.just            # [cli]          jenkins-cli wrappers
-    ├── pipeline.just       # [pipeline]     job-* management
-    └── interactive.just    # [interactive]  gum-powered menus
+├── just.d/
+│   ├── lifecycle.just      # [jenkins]      container lifecycle
+│   ├── cli.just            # [cli]          jenkins-cli wrappers
+│   ├── pipeline.just       # [pipeline]     job-* management
+│   └── interactive.just    # [interactive]  gum-powered menus
+└── scripts/                # Extracted shell / python bodies invoked by recipes
+    ├── _lib.sh             # Shared bash helper (cli() function)
+    ├── wait-ready.sh
+    ├── job-apply.sh
+    ├── job-sync.sh
+    ├── pipelines.py
+    ├── pipeline-info.py
+    ├── pipeline-export.py
+    └── pipeline-menu.sh
 ```
 
 Runtime state persists at `./data/jenkins_home`, backups at `./backups/` —

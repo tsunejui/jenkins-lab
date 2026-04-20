@@ -15,6 +15,12 @@ java        := "mise exec -- java"
 gum         := "mise exec -- gum"
 cli         := java + " -jar " + cli_jar + " -s " + jenkins_url + " -auth " + admin_id + ":" + admin_pw
 
+# Exported so scripts/*.{sh,py} can read them as environment variables.
+export JENKINS_URL            := jenkins_url
+export JENKINS_ADMIN_ID       := admin_id
+export JENKINS_ADMIN_PASSWORD := admin_pw
+export JENKINS_CLI_JAR        := cli_jar
+
 # ─── imports ──────────────────────────────────────────────────────────────────
 import './just.d/lifecycle.just'
 import './just.d/cli.just'

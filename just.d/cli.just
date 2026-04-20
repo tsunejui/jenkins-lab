@@ -3,10 +3,7 @@
 # Wait until Jenkins /login returns 200 (used before CLI calls)
 [group('cli')]
 wait-ready:
-    @curl -fsS -o /dev/null "{{jenkins_url}}/login" 2>/dev/null \
-        || {{gum}} spin --show-error --timeout=120s \
-             --title "Waiting for Jenkins to become ready..." -- \
-             bash -c 'until curl -fsS -o /dev/null "{{jenkins_url}}/login"; do sleep 2; done'
+    @./scripts/wait-ready.sh
 
 # Download jenkins-cli.jar from the running server into {{tools_dir}} (cached)
 [group('cli')]

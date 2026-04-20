@@ -9,145 +9,17 @@ job-list: cli-jar
 # List pipeline-type jobs only (WorkflowJob), with status + URL
 [group('pipeline')]
 pipelines:
-    #!/usr/bin/env python3
-    import json, urllib.request, base64, sys
-    URL = "{{jenkins_url}}/api/json?tree=jobs[name,_class,color,url]"
-    AUTH = base64.b64encode(b"{{admin_id}}:{{admin_pw}}").decode()
-    req = urllib.request.Request(URL, headers={"Authorization": f"Basic {AUTH}"})
-    try:
-        data = json.loads(urllib.request.urlopen(req, timeout=10).read())
-    except Exception as e:
-        print(f"query failed: {e}", file=sys.stderr); sys.exit(1)
-    rows = [j for j in data.get("jobs", []) if j["_class"].endswith("WorkflowJob")]
-    if not rows:
-        print("(no pipeline jobs)"); sys.exit(0)
-    STATUS = {"blue": "SUCCESS", "red": "FAILED", "yellow": "UNSTABLE",
-              "aborted": "ABORTED", "disabled": "DISABLED", "notbuilt": "NEVER_RUN"}
-    nw = max(len(j["name"]) for j in rows)
-    print(f"{'NAME':<{nw}}  {'STATUS':<18}  URL")
-    print("-" * (nw + 2 + 18 + 2 + 40))
-    for j in rows:
-        color = j.get("color") or "notbuilt"
-        running = color.endswith("_anime")
-        base = color.replace("_anime", "")
-        status = STATUS.get(base, base.upper())
-        if running: status += " (running)"
-        print(f"{j['name']:<{nw}}  {status:<18}  {j['url']}")
+    @./scripts/pipelines.py
 
 # Export a pipeline's config + metadata + last-build artefacts into DIR/NAME/
 [group('pipeline')]
 pipeline-export NAME DIR=exports_dir:
-    #!/usr/bin/env python3
-    import json, urllib.request, base64, os, sys
-    BASE = "{{jenkins_url}}"
-    NAME = "{{NAME}}"
-    DIR  = "{{DIR}}"
-    AUTH = base64.b64encode(b"{{admin_id}}:{{admin_pw}}").decode()
-    HDR  = {"Authorization": f"Basic {AUTH}"}
-
-    outdir = os.path.join(DIR, NAME)
-    os.makedirs(outdir, exist_ok=True)
-
-    def fetch(path, as_bytes=False):
-        req = urllib.request.Request(f"{BASE}{path}", headers=HDR)
-        raw = urllib.request.urlopen(req, timeout=15).read()
-        return raw if as_bytes else json.loads(raw)
-
-    def save(name, data):
-        path = os.path.join(outdir, name)
-        if isinstance(data, (dict, list)):
-            with open(path, "w") as f: json.dump(data, f, indent=2)
-        elif isinstance(data, bytes):
-            with open(path, "wb") as f: f.write(data)
-        else:
-            with open(path, "w") as f: f.write(data)
-        print(f"  {path}  ({os.path.getsize(path)} bytes)")
-
-    print(f"Exporting '{NAME}' → {outdir}/")
-
-    try:
-        save("config.xml", fetch(f"/job/{NAME}/config.xml", as_bytes=True))
-    except Exception as e:
-        print(f"cannot fetch job '{NAME}': {e}", file=sys.stderr); sys.exit(1)
-
-    job = fetch(f"/job/{NAME}/api/json")
-    save("info.json", job)
-
-    lb = job.get("lastBuild")
-    if not lb:
-        print("  (no builds yet → skipping build/stage/console)")
-        sys.exit(0)
-    num = lb["number"]
-
-    save("last-build.json", fetch(f"/job/{NAME}/{num}/api/json"))
-    try:
-        save("stages.json", fetch(f"/job/{NAME}/{num}/wfapi/describe"))
-    except Exception as e:
-        print(f"  stages.json skipped ({e})")
-    try:
-        save("console.log", fetch(f"/job/{NAME}/{num}/consoleText", as_bytes=True))
-    except Exception as e:
-        print(f"  console.log skipped ({e})")
+    @./scripts/pipeline-export.py {{NAME}} {{DIR}}
 
 # Full summary of a single pipeline: metadata + last build + stages + history
 [group('pipeline')]
 pipeline-info NAME:
-    #!/usr/bin/env python3
-    import json, urllib.request, base64, datetime, sys
-    BASE = "{{jenkins_url}}"
-    NAME = "{{NAME}}"
-    AUTH = base64.b64encode(b"{{admin_id}}:{{admin_pw}}").decode()
-
-    def get(path):
-        req = urllib.request.Request(f"{BASE}{path}",
-                                     headers={"Authorization": f"Basic {AUTH}"})
-        return json.loads(urllib.request.urlopen(req, timeout=10).read())
-
-    def when(ms):
-        return datetime.datetime.fromtimestamp(ms / 1000).isoformat(timespec="seconds")
-
-    try:
-        job = get(f"/job/{NAME}/api/json?tree=name,_class,description,"
-                  f"buildable,disabled,nextBuildNumber,url,color,"
-                  f"lastBuild[number,result,duration,timestamp,url],"
-                  f"builds[number,result,duration,timestamp]")
-    except Exception as e:
-        print(f"cannot fetch job '{NAME}': {e}", file=sys.stderr); sys.exit(1)
-
-    print(f"Name          : {job['name']}")
-    print(f"Class         : {job['_class'].rsplit('.', 1)[-1]}")
-    print(f"URL           : {job['url']}")
-    if job.get("description"):
-        print(f"Description   : {job['description']}")
-    print(f"Buildable     : {job.get('buildable')}")
-    if job.get("disabled"):
-        print("Disabled      : True")
-    print(f"Next build #  : {job.get('nextBuildNumber')}")
-    print(f"Color         : {job.get('color')}")
-
-    lb = job.get("lastBuild")
-    if not lb:
-        print("\n(no builds yet)"); sys.exit(0)
-
-    print(f"\nLast build    : #{lb['number']} "
-          f"{lb.get('result') or 'RUNNING'}  "
-          f"duration={lb['duration']}ms  at {when(lb['timestamp'])}")
-    print(f"                {lb['url']}")
-
-    try:
-        wf = get(f"/job/{NAME}/lastBuild/wfapi/describe")
-        print("\nStages (last build):")
-        for s in wf.get("stages", []):
-            print(f"  {s['name']:<18} {s['status']:<10} {s['durationMillis']:>6}ms")
-    except Exception as e:
-        print(f"\n(stage info unavailable: {e})")
-
-    builds = (job.get("builds") or [])[:8]
-    if builds:
-        print("\nRecent builds:")
-        for b in builds:
-            print(f"  #{b['number']:<4} {(b.get('result') or 'RUNNING'):<8} "
-                  f"{b['duration']:>6}ms  {when(b['timestamp'])}")
+    @./scripts/pipeline-info.py {{NAME}}
 
 # Print a job's config.xml from the controller
 [group('pipeline')]
@@ -178,26 +50,12 @@ job-update NAME: cli-jar
 # Create-or-update (idempotent) from jobs/<NAME>.xml
 [group('pipeline')]
 job-apply NAME: cli-jar
-    @test -f {{jobs_dir}}/{{NAME}}.xml || { echo "Missing {{jobs_dir}}/{{NAME}}.xml"; exit 1; }
-    @if {{cli}} list-jobs 2>/dev/null | grep -qxF "{{NAME}}"; then \
-        {{cli}} update-job {{NAME}} < {{jobs_dir}}/{{NAME}}.xml && echo "Job '{{NAME}}' updated."; \
-    else \
-        {{cli}} create-job {{NAME}} < {{jobs_dir}}/{{NAME}}.xml && echo "Job '{{NAME}}' created."; \
-    fi
+    @./scripts/job-apply.sh {{NAME}}
 
 # Apply every jobs/*.xml to the controller (bulk seed/sync)
 [group('pipeline')]
 job-sync: cli-jar
-    @shopt -s nullglob; \
-    existing="$({{cli}} list-jobs 2>/dev/null)"; \
-    for f in {{jobs_dir}}/*.xml; do \
-        n=$(basename "$f" .xml); \
-        if echo "$existing" | grep -qxF "$n"; then \
-            {{cli}} update-job "$n" < "$f" && echo "updated : $n"; \
-        else \
-            {{cli}} create-job "$n" < "$f" && echo "created : $n"; \
-        fi; \
-    done
+    @./scripts/job-sync.sh
 
 # Delete a job (destructive, prompts for confirmation)
 [group('pipeline')]

@@ -9,14 +9,17 @@ wait-ready:
 [group('cli')]
 cli-jar: wait-ready
     @mkdir -p {{tools_dir}}
-    @test -f {{cli_jar}} || curl -fsSo {{cli_jar}} "{{jenkins_url}}/jnlpJars/jenkins-cli.jar"
+    @if [ ! -f {{cli_jar}} ]; then \
+        echo "↓ downloading {{jenkins_url}}/jnlpJars/jenkins-cli.jar"; \
+        curl -fsSo {{cli_jar}} "{{jenkins_url}}/jnlpJars/jenkins-cli.jar"; \
+        echo "  saved  → {{cli_jar}} ($(wc -c < {{cli_jar}} | tr -d ' ') bytes)"; \
+    fi
 
 # Re-download jenkins-cli.jar (e.g. after a Jenkins upgrade)
 [group('cli')]
 cli-jar-refresh:
     @rm -f {{cli_jar}}
     @just cli-jar
-    @echo "Refreshed: {{cli_jar}}"
 
 # Run an arbitrary jenkins-cli command, e.g. `just cli help`
 [group('cli')]

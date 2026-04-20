@@ -6,6 +6,7 @@ service     := "jenkins"
 data_dir    := "./data/jenkins_home"
 jobs_dir    := "./jobs"
 tools_dir   := "./tools"
+exports_dir := "./exports"
 cli_jar     := tools_dir + "/jenkins-cli.jar"
 jenkins_url := env_var_or_default("JENKINS_URL", "http://localhost:8090")
 admin_id    := env_var_or_default("JENKINS_ADMIN_ID", "admin")

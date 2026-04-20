@@ -34,6 +34,61 @@ pipelines:
         if running: status += " (running)"
         print(f"{j['name']:<{nw}}  {status:<18}  {j['url']}")
 
+# Export a pipeline's config + metadata + last-build artefacts into DIR/NAME/
+[group('pipeline')]
+pipeline-export NAME DIR=exports_dir:
+    #!/usr/bin/env python3
+    import json, urllib.request, base64, os, sys
+    BASE = "{{jenkins_url}}"
+    NAME = "{{NAME}}"
+    DIR  = "{{DIR}}"
+    AUTH = base64.b64encode(b"{{admin_id}}:{{admin_pw}}").decode()
+    HDR  = {"Authorization": f"Basic {AUTH}"}
+
+    outdir = os.path.join(DIR, NAME)
+    os.makedirs(outdir, exist_ok=True)
+
+    def fetch(path, as_bytes=False):
+        req = urllib.request.Request(f"{BASE}{path}", headers=HDR)
+        raw = urllib.request.urlopen(req, timeout=15).read()
+        return raw if as_bytes else json.loads(raw)
+
+    def save(name, data):
+        path = os.path.join(outdir, name)
+        if isinstance(data, (dict, list)):
+            with open(path, "w") as f: json.dump(data, f, indent=2)
+        elif isinstance(data, bytes):
+            with open(path, "wb") as f: f.write(data)
+        else:
+            with open(path, "w") as f: f.write(data)
+        print(f"  {path}  ({os.path.getsize(path)} bytes)")
+
+    print(f"Exporting '{NAME}' → {outdir}/")
+
+    try:
+        save("config.xml", fetch(f"/job/{NAME}/config.xml", as_bytes=True))
+    except Exception as e:
+        print(f"cannot fetch job '{NAME}': {e}", file=sys.stderr); sys.exit(1)
+
+    job = fetch(f"/job/{NAME}/api/json")
+    save("info.json", job)
+
+    lb = job.get("lastBuild")
+    if not lb:
+        print("  (no builds yet → skipping build/stage/console)")
+        sys.exit(0)
+    num = lb["number"]
+
+    save("last-build.json", fetch(f"/job/{NAME}/{num}/api/json"))
+    try:
+        save("stages.json", fetch(f"/job/{NAME}/{num}/wfapi/describe"))
+    except Exception as e:
+        print(f"  stages.json skipped ({e})")
+    try:
+        save("console.log", fetch(f"/job/{NAME}/{num}/consoleText", as_bytes=True))
+    except Exception as e:
+        print(f"  console.log skipped ({e})")
+
 # Full summary of a single pipeline: metadata + last build + stages + history
 [group('pipeline')]
 pipeline-info NAME:

@@ -1,5 +1,6 @@
 data/
 backups/
+exports/
 .mise.local.toml
 tools/*.jar
 .claude/

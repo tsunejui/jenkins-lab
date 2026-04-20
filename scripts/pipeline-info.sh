@@ -14,11 +14,13 @@ if ! xml=$(cli get-job "$NAME" 2>&1); then
 fi
 
 # Extract first <TAG>...</TAG> text content (single-line tags only).
+# `|| true` so an absent tag doesn't trip set -o pipefail.
 extract() {
     printf '%s' "$xml" \
       | grep -oE "<$1>[^<]*</$1>" \
       | head -1 \
-      | sed -E "s/<[^>]*>//g"
+      | sed -E "s/<[^>]*>//g" \
+      || true
 }
 
 echo "Name          : $NAME"
